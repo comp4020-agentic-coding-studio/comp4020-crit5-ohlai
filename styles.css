@@ -208,6 +208,18 @@ body[data-phase="ready"] .hold:hover img,
   transition: filter 90ms ease;
 }
 
+/* The player's press. Full colour so it plainly answers, but pushed in and
+   without the halo, so it never reads as the wall showing a hold. */
+.hold.held img {
+  filter: brightness(var(--lift)) saturate(1.12);
+  scale: calc(var(--flip) * var(--scale) * 0.92) calc(var(--scale) * 0.92);
+  translate: 0 2px;
+  transition:
+    filter 60ms ease,
+    scale 60ms ease,
+    translate 60ms ease;
+}
+
 .hold.wrong img {
   animation: miss 500ms ease both;
 }

@@ -68,7 +68,10 @@ function build(): void {
   });
 }
 
-/** Light a hold for a beat. */
+/**
+ * The wall's voice: light a hold for a beat. Only ever called for holds the
+ * wall is showing, never for holds the player pressed --- see grip().
+ */
 function flash(index: number, duration = 420): void {
   const button = buttons[index];
   const hold = holds[index];
@@ -76,6 +79,24 @@ function flash(index: number, duration = 420): void {
   button.classList.add("lit");
   voice.strike(pitchOf(hold));
   later(() => button.classList.remove("lit"), duration);
+}
+
+/**
+ * The player's voice. A press has to be answered visibly --- otherwise the
+ * opening hold is a button that does nothing --- but it must not be answered
+ * in the wall's language. Playing the first round exposed why: press the
+ * breathing hold and it lit exactly like a route hold, then the real route hold
+ * lit a second later, so the round read as a two-hold route. Copy back what you
+ * were shown and you fall on move one, having done nothing wrong. A grip takes
+ * the colour and pushes the hold in; a flash lifts it and puts a halo round it.
+ */
+function grip(index: number, duration = 300): void {
+  const button = buttons[index];
+  const hold = holds[index];
+  if (!button || !hold) return;
+  button.classList.add("held");
+  voice.strike(pitchOf(hold));
+  later(() => button.classList.remove("held"), duration);
 }
 
 function paint(): void {
@@ -87,6 +108,10 @@ function paint(): void {
 
 /** Play the route back, then hand the wall to the player. */
 function show(): void {
+  // Everything from the previous round has already fired by the time a new
+  // hold is added; dropping the handles keeps `pending` from growing for the
+  // whole climb.
+  clearPending();
   paint();
   const beat = game.sequence.length > 5 ? 460 : 560;
   game.sequence.forEach((index, position) => {
@@ -133,7 +158,7 @@ function topOut(): void {
 function reset(): void {
   clearPending();
   for (const button of buttons) {
-    button.classList.remove("lit", "wrong");
+    button.classList.remove("lit", "held", "wrong");
   }
   game = START;
   paint();
@@ -150,7 +175,7 @@ function touched(index: number): void {
     // The first press is not a move --- there is no route yet. It answers the
     // pulsing hold, proves that pressing does something, and buys the audio
     // context. Then the wall takes its turn.
-    flash(index, 300);
+    grip(index);
     later(addHold, 620);
     game = { ...game, phase: "showing" };
     paint();
@@ -167,8 +192,8 @@ function touched(index: number): void {
     return;
   }
 
-  // A correct press: light the hold it matched.
-  flash(index, 300);
+  // A correct press: the hold answers in the player's voice, not the wall's.
+  grip(index);
 
   if (game.phase === "topped") {
     later(topOut, 380);
