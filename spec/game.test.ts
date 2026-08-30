@@ -124,44 +124,13 @@ describe("it is a game, not a document", () => {
     expect(shipped.some((name) => name.endsWith(".js"))).toBe(true);
   });
 
-  it("gives the player a surface to act on", () => {
-    const home = pages.find(({ name }) => name === "index.html");
-    expect(home).toBeTruthy();
-    const doc = new JSDOM(home!.html).window.document;
-    const surface = doc.querySelector(
-      "canvas, svg, [data-play], main button, main a[href], main input",
-    );
-    expect(
-      surface,
-      "the first screen has to offer the opening move to something a player can hit",
-    ).toBeTruthy();
-  });
+  // Whether the player has a surface to act on is a question about the page
+  // AFTER the entry chunk runs, since every hold is made at load. spec/boot.test.ts
+  // asks it there, against the built bundle.
 });
 
-describe("a wrong move is possible, and play concludes", () => {
-  // The spec asks for ONE game rule under a focused automated test, and it has
-  // to be a rule of YOUR game — which does not exist yet. That is why this
-  // starts red: red-to-green across the week is the work, and the commit that
-  // turns it green is the one PROCESS.md should cite.
-  //
-  // Replace this with a real test against a pure module holding the rule:
-  // import { step } from "../src/rules.ts" and assert that the losing input
-  // produces a loss and the winning one produces an end. Keep the rule pure and
-  // separate from rendering, or the only way to test it is to drive the DOM.
-  //
-  // Two assertions, not one, because both halves are spec lines: failure is
-  // reachable, AND play terminates. A game you can lose but never finish fails
-  // the five-minute line just as hard.
-
-  it("a wrong move ends the round in a loss", () => {
-    expect.fail(
-      "not written yet — point this at your rule module once the game has a rule",
-    );
-  });
-
-  it("play reaches an ending rather than running forever", () => {
-    expect.fail(
-      "not written yet — assert that some sequence of moves terminates",
-    );
-  });
-});
+// "a wrong move is possible, and play concludes" is the other half of this
+// spec, and it lives in spec/rules.test.ts. It is not here because it is not a
+// question about the built page: the rule is a pure function in src/rules.ts,
+// and testing it through thirty rendered buttons would test the wiring instead
+// of the rule.
