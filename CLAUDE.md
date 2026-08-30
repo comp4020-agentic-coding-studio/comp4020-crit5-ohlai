@@ -11,13 +11,32 @@ gets marked, not this repo.
 
 ## What this is
 
-<!-- Replace this section once the game exists. It is the first thing the agent
-     reads, and a vague answer here shows up as vague work. C4's version named
-     the instrument, the mapping from gesture to sound, and the point of view
-     that decided tradeoffs. This one wants the equivalent: what the player
-     does, what the one mechanic is, what failing looks like, what ending looks
-     like, and the tradeoff rule to apply when depth and legibility pull
-     against each other. -->
+**Beta** --- a bouldering wall you climb from memory. Thirty-odd holds scatter a
+dark wall, every one of them grey. One breathes. Press it and the wall lights a
+hold; press the route back from the bottom and it adds another, until you top
+out at eight.
+
+- **What the player does:** watch a route, then repeat it in order from the
+  first hold. One press per hold, no timer, no undo.
+- **The one mechanic:** the route grows by exactly one hold per round, and is
+  always replayed from the bottom. That is the whole rule set; everything else
+  is dressing on it.
+- **Failing:** a press that is not the next hold in the route. The wall shakes,
+  goes dark, and the climb is over --- back to a fresh wall. On a wall of thirty
+  exactly one press is right, so falling is real rather than ceremonial.
+- **Ending:** topping out at `TOP_OUT` (eight holds), which lights the whole
+  wall bottom to top. Both endings return to the opening screen without asking.
+- **Point of view:** the wall is a physical surface being *shown* to you, not a
+  menu. It has one voice for showing and the player has another --- the wall
+  **lights** a hold (lifted, haloed); the player **grips** one (full colour,
+  pushed in, no halo). These never look alike, because a player who cannot tell
+  the wall's move from their own falls without having made a mistake.
+- **The tradeoff rule:** when depth and legibility pull against each other,
+  legibility wins, because the brief forbids explaining and the affordance is
+  the only teacher left. Colour on this page is a scarce resource: the wall is
+  dark and the holds are grey so that anything bright is *the game speaking*.
+  A feature that needs a new bright thing on screen has to justify spending from
+  that budget or it does not ship.
 
 ## Hard constraints
 
