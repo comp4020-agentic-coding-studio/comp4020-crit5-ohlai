@@ -115,6 +115,19 @@ passes by chance.
 - Set audio parameters with `setTargetAtTime`, not `setValueAtTime`. Web Audio
   renders on its own thread, so a value set as a target keeps gliding through a
   main-thread stall instead of stepping when the thread recovers.
+- `var()` inside a **custom property** is substituted where that property is
+  *declared*, not where it is used. `--dormant: brightness(var(--gain))` on
+  `:root` resolves `--gain` against `:root`, so every element inherits the
+  already-substituted fallback and the per-element override is silently ignored
+  --- no warning, no invalid declaration, just the wrong picture. Declare the
+  composed property on the same element that sets its inputs (here, `.hold`).
+  Nothing in `check` catches this; the rendered page is the only witness, which
+  is why the "open it and look at it" rule earns its place.
+- Filters do not compose across a `filter:` value the way you would guess:
+  `filter: none drop-shadow(...)` is invalid outright, and a `brightness()`
+  applied to a photograph is relative to *that photograph*. Four holds shot
+  under different light need four gains, measured from the files, or one
+  `brightness()` reads correctly for one of them and wrongly for three.
 - In jsdom `getBoundingClientRect()` returns zeros. Normalise pointer position
   with `rect.width || window.innerWidth` or every value becomes `NaN`.
 - `oxlint --ignore-path .gitignore` lints anything committed under `public/`.
