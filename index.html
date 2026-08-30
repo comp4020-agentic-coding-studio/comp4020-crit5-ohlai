@@ -3,17 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>COMP4020 prototype</title>
+    <title>Beta</title>
     <meta
       name="description"
-      content="Replace this with one sentence saying what this page is. A search result and a link preview both show it."
+      content="A bouldering wall that shows you a route one hold at a time, and asks for it back."
     />
 
-    <!--
-      The link-preview card: public/card.png, 1200x630 --- replace it. The URL
-      resolves against this page, like any link. No og:title/og:description:
-      scrapers fall back to the <title> and description above.
-    -->
     <meta property="og:type" content="website" />
     <meta property="og:image" content="./card.png" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -21,18 +16,24 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <header>
-      <nav aria-label="Primary">
-        <a href="./">Home</a>
-      </nav>
-    </header>
-    <main>
-      <h1>COMP4020 prototype</h1>
-      <p>
-        Replace this with your prototype. This week's brief is on the course website;
-        <code>spec/README.md</code> explains how the checks in this repo relate to it.
-      </p>
-    </main>
+    <!--
+      Two elements here exist because the invariants require them: exactly one
+      <h1> and a <nav> landmark on every built page. The brief forbids the page
+      from explaining itself, so neither is allowed to become a place to hide
+      instructions. The <h1> is the route's name and is read only by screen
+      readers; the <nav> holds the height gauge, which is the one thing on
+      screen that is genuinely about position. PROCESS.md argues the case.
+    -->
+    <h1 class="offscreen">Beta</h1>
+
+    <nav class="gauge" aria-label="Height on the route">
+      <div class="gauge-track">
+        <div class="gauge-fill" data-gauge></div>
+      </div>
+    </nav>
+
+    <main class="wall" data-wall></main>
+
     <script type="module" src="./main.ts"></script>
   </body>
 </html>

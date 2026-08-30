@@ -1,4 +1,192 @@
-// The TypeScript entry point, loaded as a module by index.html. Vite compiles
-// it; `pnpm typecheck` type-checks it. If the week's spec rules out
-// JavaScript, delete this file and the script tag that loads it.
-export {};
+import { Voice } from "./src/audio.ts";
+import {
+  extend,
+  handOver,
+  height,
+  isOver,
+  press,
+  START,
+  type Game,
+} from "./src/rules.ts";
+import { gridFor, layout, nextHold, pitchOf, type Hold } from "./src/wall.ts";
+
+// Wiring. Everything that decides anything lives in src/rules.ts; this file
+// turns state into a wall and presses into state, and owns the clock.
+
+const wall = document.querySelector<HTMLElement>("[data-wall]");
+const gauge = document.querySelector<HTMLElement>("[data-gauge]");
+
+const voice = new Voice();
+const holds: Hold[] = layout(
+  gridFor(window.innerWidth, window.innerHeight),
+  Math.random,
+);
+const buttons: HTMLButtonElement[] = [];
+
+let game: Game = START;
+/** Timers for the playback, kept so a fall can cancel a route mid-flight. */
+let pending: number[] = [];
+
+function clearPending(): void {
+  for (const timer of pending) window.clearTimeout(timer);
+  pending = [];
+}
+
+function later(run: () => void, delay: number): void {
+  pending.push(window.setTimeout(run, delay));
+}
+
+// --- the wall -------------------------------------------------------------
+
+function build(): void {
+  if (!wall) return;
+  holds.forEach((hold, index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "hold";
+    button.dataset.index = String(index);
+    // The kind drives the per-photograph dormant gain in the stylesheet.
+    button.dataset.kind = hold.kind;
+    // A name, not a nudge. Screen readers get what the hold is, never what to
+    // do with it --- off screen still counts as off screen.
+    button.setAttribute("aria-label", `${hold.kind} hold`);
+    button.style.left = `${hold.x * 100}%`;
+    button.style.top = `${hold.y * 100}%`;
+    button.style.setProperty("--spin", `${hold.spin}deg`);
+    button.style.setProperty("--scale", String(hold.scale));
+    button.style.setProperty("--flip", hold.flipped ? "-1" : "1");
+
+    const image = document.createElement("img");
+    image.src = `./holds/${hold.kind}.png`;
+    image.alt = "";
+    image.draggable = false;
+    button.append(image);
+
+    button.addEventListener("click", () => touched(index));
+    wall.append(button);
+    buttons.push(button);
+  });
+}
+
+/** Light a hold for a beat. */
+function flash(index: number, duration = 420): void {
+  const button = buttons[index];
+  const hold = holds[index];
+  if (!button || !hold) return;
+  button.classList.add("lit");
+  voice.strike(pitchOf(hold));
+  later(() => button.classList.remove("lit"), duration);
+}
+
+function paint(): void {
+  document.body.dataset.phase = game.phase;
+  if (gauge) gauge.style.setProperty("--height", String(height(game)));
+}
+
+// --- the loop -------------------------------------------------------------
+
+/** Play the route back, then hand the wall to the player. */
+function show(): void {
+  paint();
+  const beat = game.sequence.length > 5 ? 460 : 560;
+  game.sequence.forEach((index, position) => {
+    later(() => flash(index), position * beat + 420);
+  });
+  later(() => {
+    game = handOver(game);
+    paint();
+  }, game.sequence.length * beat + 420);
+}
+
+function addHold(): void {
+  const previous = game.sequence.at(-1);
+  game = extend(game, nextHold(holds.length, previous, Math.random));
+  show();
+}
+
+function fall(index: number): void {
+  clearPending();
+  const hold = holds[index];
+  if (hold) voice.fall(pitchOf(hold));
+  buttons[index]?.classList.add("wrong");
+  paint();
+  // Long enough to register as an ending, short enough that the next go feels
+  // available rather than offered.
+  later(reset, 1900);
+}
+
+function topOut(): void {
+  clearPending();
+  paint();
+  voice.fanfare(game.sequence.map((index) => pitchOf(holds[index]!)));
+  // The whole wall lights, bottom to top: the route was the point, and now
+  // there is nothing left of it to climb.
+  const order = [...buttons.keys()].sort(
+    (a, b) => (holds[b]?.y ?? 0) - (holds[a]?.y ?? 0),
+  );
+  order.forEach((index, position) => {
+    later(() => buttons[index]?.classList.add("lit"), position * 45);
+  });
+  later(reset, order.length * 45 + 2600);
+}
+
+function reset(): void {
+  clearPending();
+  for (const button of buttons) {
+    button.classList.remove("lit", "wrong");
+  }
+  game = START;
+  paint();
+}
+
+function touched(index: number): void {
+  // Every path in here starts with a real press, which is the only moment the
+  // browser will let audio begin.
+  voice.unlock();
+
+  if (isOver(game)) return;
+
+  if (game.phase === "ready") {
+    // The first press is not a move --- there is no route yet. It answers the
+    // pulsing hold, proves that pressing does something, and buys the audio
+    // context. Then the wall takes its turn.
+    flash(index, 300);
+    later(addHold, 620);
+    game = { ...game, phase: "showing" };
+    paint();
+    return;
+  }
+
+  if (game.phase !== "climbing") return;
+
+  const before = game;
+  game = press(game, index);
+
+  if (game.phase === "fallen") {
+    fall(index);
+    return;
+  }
+
+  // A correct press: light the hold it matched.
+  flash(index, 300);
+
+  if (game.phase === "topped") {
+    later(topOut, 380);
+    return;
+  }
+  if (game.phase === "cleared") {
+    later(addHold, 780);
+    return;
+  }
+  if (before.matched !== game.matched) paint();
+}
+
+// --- start ----------------------------------------------------------------
+
+build();
+paint();
+
+// One hold breathes on the opening screen. It is the only colour on a grey
+// wall and the only thing that moves, which is the whole of the tutorial.
+const startHold = buttons[Math.floor(holds.length / 2)];
+startHold?.classList.add("start");

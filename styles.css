@@ -1,16 +1,296 @@
+/*
+  The wall is dark and the holds start grey, so the only colour on screen is
+  the colour the game puts there. Every piece of teaching this page does is
+  spent from that budget: the pulsing start hold, the lit hold, the wall
+  lifting when it is the player's turn. Nothing else is allowed to be bright.
+*/
+
+:root {
+  --wall-back: #15131a;
+  --wall-front: #221f2b;
+  --grout: rgb(255 255 255 / 4%);
+  --hold-size: clamp(54px, 10vmin, 116px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
 body {
   margin: 0;
-  padding: 2rem;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 50% 0%, var(--wall-front), var(--wall-back)),
+    var(--wall-back);
+  color: #f4f1ea;
   font-family: system-ui, sans-serif;
-  line-height: 1.6;
-  color: #1a1a1a;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
-main {
-  max-width: 40rem;
-  margin: 0 auto;
+/* The plywood grid a wall is actually built from. Barely there on purpose: it
+   gives the eye a surface without competing with the holds. */
+body::before {
+  position: fixed;
+  background-image:
+    linear-gradient(var(--grout) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grout) 1px, transparent 1px);
+  background-size: 25vmin 25vmin;
+  content: "";
+  inset: 0;
+  pointer-events: none;
 }
 
-a {
-  color: #0b5fff;
+.offscreen {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* --- the height gauge ---------------------------------------------------- */
+
+.gauge {
+  position: fixed;
+  z-index: 2;
+  top: 12vh;
+  bottom: 12vh;
+  left: clamp(12px, 2.4vw, 30px);
+  width: 13px;
+  opacity: 1;
+  transition: opacity 400ms ease;
+}
+
+/* Before the first hold there is no height to report, and an empty track just
+   reads as a scratch on the screen. It arrives with the route. */
+body[data-phase="ready"] .gauge {
+  opacity: 0;
+}
+
+/* One rung per round of the route, so the empty track still says "this is a
+   scale with a top" rather than "this is a line". */
+.gauge-track {
+  position: relative;
+  height: 100%;
+  border: 1px solid rgb(255 255 255 / 22%);
+  border-radius: 999px;
+  background:
+    repeating-linear-gradient(
+      to top,
+      rgb(255 255 255 / 28%) 0 1px,
+      transparent 1px calc(100% / 8)
+    ),
+    rgb(255 255 255 / 9%);
+}
+
+.gauge-fill {
+  --height: 0;
+
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: calc(var(--height) * 100%);
+  border-radius: 999px;
+  background: linear-gradient(to top, #d94f3d, #f2b134);
+  box-shadow: 0 0 14px rgb(242 177 52 / 45%);
+  transition: height 420ms cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+/* --- the wall ------------------------------------------------------------ */
+
+/* Inset by more than half a hold on every side, so a hold that jitters to the
+   edge of its cell still lands whole. Holds are positioned in percentages of
+   this box, so the margin tracks --hold-size without any arithmetic in JS. */
+.wall {
+  position: fixed;
+  inset: calc(var(--hold-size) * 0.62);
+  transition: filter 500ms ease;
+}
+
+/* The wall's turn: everything dims a little and nothing responds. The player
+   is watching, and the page says so by going quiet rather than by saying it. */
+body[data-phase="showing"] .wall {
+  filter: brightness(78%);
+}
+
+body[data-phase="showing"] .hold {
+  cursor: default;
+}
+
+/* The four holds were photographed under different light --- green averages a
+   third of yellow's luminance --- so one brightness() sends green almost black
+   while yellow stays legible. These gains are measured, not guessed: each one
+   is the factor that lands that photograph on the same dormant grey, so the
+   resting wall reads as one wall. --lift is the same correction for the LIT
+   state, but upward only: a lit hold is the brightest thing on screen, so the
+   dark photographs are raised to meet the bright ones rather than everything
+   being levelled down. Re-measure if the images are ever recut. */
+.hold[data-kind="green"] {
+  --gain: 1.67;
+  --lift: 2.4;
+}
+
+.hold[data-kind="red"] {
+  --gain: 0.99;
+  --lift: 1.5;
+}
+
+.hold[data-kind="yellow"] {
+  --gain: 0.48;
+  --lift: 1;
+}
+
+.hold[data-kind="orange"] {
+  --gain: 0.53;
+  --lift: 1.05;
+}
+
+.hold {
+  /* --dormant lives here rather than on :root because var() inside a custom
+     property is substituted where that property is DECLARED, not where it is
+     used. Declared on :root, var(--gain) resolves against :root --- which has
+     no --gain --- and every hold silently inherits the fallback. */
+  --gain: 1;
+  --lift: 1;
+  --dormant: grayscale(100%) brightness(var(--gain)) contrast(88%);
+
+  position: absolute;
+  width: var(--hold-size);
+  height: var(--hold-size);
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+}
+
+.hold img {
+  width: 100%;
+  height: 100%;
+  filter: var(--dormant);
+  object-fit: contain;
+  rotate: var(--spin);
+  scale: calc(var(--flip) * var(--scale)) var(--scale);
+  transition:
+    filter 260ms ease,
+    translate 160ms ease;
+  user-select: none;
+}
+
+/* Hover and focus are affordance, not decoration: they are how a pointer finds
+   out the grey shapes are live before committing to a press. */
+body[data-phase="climbing"] .hold:hover img,
+body[data-phase="ready"] .hold:hover img,
+.hold:focus-visible img {
+  filter: grayscale(70%) brightness(calc(var(--gain, 1) * 1.62));
+  translate: 0 -3px;
+}
+
+.hold:focus-visible {
+  outline: none;
+}
+
+.hold.lit img {
+  filter: brightness(var(--lift)) saturate(1.12)
+    drop-shadow(0 0 18px rgb(255 214 138 / 65%));
+  translate: 0 -5px;
+  transition: filter 90ms ease;
+}
+
+.hold.wrong img {
+  animation: miss 500ms ease both;
+}
+
+/* The opening screen: one hold breathing on a grey wall. The only moving thing
+   and the only coloured thing, which is the entire invitation. */
+body[data-phase="ready"] .hold.start img {
+  animation: breathe 2.1s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    filter: var(--dormant);
+  }
+
+  50% {
+    filter: brightness(var(--lift)) saturate(1.12)
+      drop-shadow(0 0 16px rgb(255 214 138 / 45%));
+    translate: 0 -4px;
+  }
+}
+
+@keyframes miss {
+  0% {
+    filter: none;
+  }
+
+  30% {
+    filter: brightness(180%) saturate(160%);
+  }
+
+  100% {
+    filter: grayscale(100%) brightness(22%);
+  }
+}
+
+/* A fall shakes the wall. Brief, and it takes the whole surface rather than
+   the hold, because what went wrong was the route and not that one hold. */
+body[data-phase="fallen"] .wall {
+  animation: slip 620ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  filter: brightness(45%) saturate(40%);
+}
+
+@keyframes slip {
+  10%,
+  90% {
+    translate: -5px 2px;
+  }
+
+  20%,
+  80% {
+    translate: 8px -3px;
+  }
+
+  30%,
+  50%,
+  70% {
+    translate: -11px 4px;
+  }
+
+  40%,
+  60% {
+    translate: 11px -2px;
+  }
+}
+
+body[data-phase="topped"] .wall {
+  filter: brightness(112%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hold img,
+  .gauge-fill,
+  .wall {
+    transition-duration: 1ms;
+  }
+
+  body[data-phase="fallen"] .wall {
+    animation: none;
+  }
+
+  body[data-phase="ready"] .hold.start img {
+    animation: breathe 2.1s steps(2, jump-none) infinite;
+  }
 }
