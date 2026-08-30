@@ -1,70 +1,70 @@
 # Process overview
 
-<!-- TEMPLATE: this file is a shape to fill in, not a form. Replace everything
-     in it with your own overview, and delete this comment — `pnpm
-     check:evidence` will remind you if it's still here. -->
-
-A reading-guide to how the work came together --- a map to your process, not an
-essay about it. Markers read this file and follow its citations; they don't
-trawl the repo for evidence you didn't point at, so if a moment mattered, cite
-it.
-
-This file is the shape; the course site's
-[assessment page](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/#what-you-submit)
-is the requirement, and its
-[word counts](https://comp.anu.edu.au/courses/comp4020-agentic-coding-studio/topics/assessment/#word-counts)
-cover every deliverable.
-
 ## What I built
 
-One paragraph: the thing, and the idea behind it.
+**Beta** --- a bouldering wall you climb from memory. Thirty-odd holds scatter a
+dark wall, all of them grey. One breathes. Press it and the wall lights a hold;
+repeat the route from the bottom and it adds another, until you top out at eight
+or fall. The brief forbids instructions, so every piece of teaching is spent
+from one budget: the wall is dark, the holds are grey, and the only colour on
+the opening screen is the single hold that is moving.
+
+![The opening screen: one hold breathing on a wall of grey](docs/opening.png)
+
+The invariants require a `<nav>` landmark and exactly one `<h1>`, which collides
+head on with a brief that forbids the page explaining itself. I did not want to
+satisfy that with a decorative heading, so both were made to earn their place:
+the `<h1>` is the route's name and is screen-reader only, and the `<nav>` holds
+the height gauge, which is genuinely about position on the route and is hidden
+until there is a route to be positioned on. `index.html` carries a comment
+saying so, where the next change would land.
 
 ## The moments that mattered
 
-Three or four for an assignment; fewer is fine for a weekly prototype. Keep the
-list short so each moment has room to do all four jobs:
+**1. A test that was right about the wrong thing.** My own spec test asked
+whether the page "gives the player a surface to act on" and failed --- every
+hold is built by the entry chunk at load, so the shipped `index.html` is an
+empty `<main>`. The obvious fix was to relax the selector until the
+implementation passed, which would have deleted the question. Instead I moved it
+to where it could be answered honestly: boot the real built bundle in jsdom and
+ask the live DOM. That catches a failure nothing else in the suite can see ---
+the page loads and nothing happens --- which is exactly what a stranger at a
+crit would meet.
+[`9cc6d73`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-ohlai/commit/9cc6d73)
 
-1. **what happened** --- the problem, or the thing that went wrong
-2. **what you did instead of the obvious thing** --- the call you made, and why
-   it beat the obvious one
-3. **how you knew it was right** --- the check you ran, the viewport you looked
-   at, what you read before accepting the diff
-4. **the citation** --- a commit or commit range, a `CLAUDE.md` change, a check
-   that went from red to green, a prompt paired with the commit it produced
+**2. The bug that only playing could find.** Every test passed, so I drove a
+real route through the built page and printed what the wall did. Round one
+showed *two* holds lighting: the acknowledgement of my own press on the start
+hold, then the actual route hold a second later --- identical treatment. Copy
+back what you were shown and you fall on move one having done nothing wrong,
+which is the worst possible first lesson from a game that has to teach itself.
+The rule tests were all correct; the wall was showing the player the wrong move.
+The fix is a grammar rather than a tweak: the wall **lights** holds (lifted,
+haloed) and the player **grips** them (pushed in, no halo).
+[`67421f4`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-ohlai/commit/67421f4)
 
-Jobs 2 and 3 are the ones the repo can't tell a reader on its own, so they're
-where the marks are. The strongest moments are the ones where a correction
-landed in the **harness** --- the standards and checks your work has to satisfy
---- rather than in a retry: a rule added to `CLAUDE.md`, a check wired up, an
-attempt thrown away. Retrying until it passes is the routine case, and changing
-what the work runs against is the skilled one.
+**3. A correction that landed in the harness, not the code.** The holds are four
+photographs shot under different light --- green averages a third of yellow's
+luminance --- so one `brightness()` cannot be right for all four, and half the
+wall vanished into the background. Measuring the files and setting a gain per
+hold fixed it, but the first attempt silently did nothing: `var()` inside a
+custom property is substituted where that property is *declared*, so
+`--dormant` on `:root` resolved `--gain` against `:root` and every hold
+inherited the fallback. No warning, no invalid declaration, just a wrong
+picture. Both facts went into `CLAUDE.md` rather than into a retry, under a note
+that nothing in `check` can catch either and the rendered page is the only
+witness.
+[`5f1da57`](https://github.com/comp4020-agentic-coding-studio/comp4020-crit5-ohlai/commit/5f1da57)
 
-Cite each moment as a link whose text is the commit hash or range and whose
-target is this repo's commit or compare URL, so a reader clicks straight to the
-evidence:
+![Topping out: the whole wall in colour, bottom to top](docs/topped-out.png)
 
-- one commit: [`a1b2c3d`](https://github.com/YOUR-ORG/YOUR-REPO/commit/a1b2c3d)
-- a range:
-  [`a1b2c3d...e4f5a6b`](https://github.com/YOUR-ORG/YOUR-REPO/compare/a1b2c3d...e4f5a6b)
+## What the tests deliberately do not cover
 
-To pair a prompt with the commit it produced, quote the prompt (curated, not a
-full transcript) next to the citation:
-
-> the prompt, verbatim
-
-Screenshots are welcome where one carries the verification better than a
-sentence does. Commit the file to this repo and link it with a **relative**
-path, which is what makes it render on GitHub: `![alt text](docs/before.png)`.
-Images don't count towards the word count and don't replace the citation.
-
-## Before you ship
-
-`pnpm check:evidence` verifies your citations resolve to real commits, that a
-reflection entry the marker reads is in `reflections/`, and that your
-`CLAUDE.md` is there --- before a marker ever opens the file. It checks that
-your map is traceable, not that it is good: the marker judges whether your
-small, deliberately chosen set of moments shows real judgement and reflection. A
-green check is not a substitute for that curation.
-
-Images aren't checked: unlike a citation whose SHA doesn't resolve, a broken
-image is visible the moment this file is rendered on GitHub.
+`spec/game.test.ts` greps for the tutorial I might have written at 2am --- a
+how-to modal, hint text, "click to start". Passing it means only that I did not
+give up and explain. Whether the breathing hold actually teaches the opening
+move, whether falling on hold seven of eight feels fair, and whether five
+minutes still holds attention are settled by four people at the keyboard while I
+stay quiet. `spec/rules.test.ts` covers the one rule that *can* be pinned: on a
+wall of thirty, exactly one press survives, so losing is a real risk rather than
+a formality.
