@@ -61,6 +61,17 @@ export class Voice {
     upper.start(at);
     tone.stop(at + seconds + 0.1);
     upper.stop(at + seconds + 0.1);
+    // Every note builds four nodes and they stay wired to the bus until they
+    // are cut loose. A stopped oscillator is not enough --- the graph still
+    // holds the gain. Eight rounds of eight holds is over two hundred nodes,
+    // and playing a full route headless stalled the renderer outright before
+    // this line existed.
+    tone.onended = () => {
+      tone.disconnect();
+      upper.disconnect();
+      shimmer.disconnect();
+      gain.disconnect();
+    };
   }
 
   /** One hold, struck. */
@@ -92,6 +103,10 @@ export class Voice {
     tone.connect(gain);
     tone.start(at);
     tone.stop(at + 1.1);
+    tone.onended = () => {
+      tone.disconnect();
+      gain.disconnect();
+    };
   }
 
   /** Topping out: the route, played as a chord that keeps rising. */
