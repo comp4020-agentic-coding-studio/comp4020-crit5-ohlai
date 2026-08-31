@@ -3,9 +3,9 @@
 ## What I built
 
 **Beta**, a bouldering wall you climb from memory. Thirty-odd holds scatter a
-dark wall, all of them grey. One breathes. Press it and the wall lights a hold;
-repeat the route from the bottom and it adds another, until you top out at
-eight or fall. The brief forbids instructions, so all the teaching comes out of
+dark wall, all of them grey. One breathes, and that one is round one. Press it
+and the wall adds a hold; repeat the route from the bottom and it adds another,
+until you top out at eight or fall. The brief forbids instructions, so all the teaching comes out of
 one budget. The wall is dark, the holds are grey, and the only colour on the
 opening screen is the single hold that moves.
 
