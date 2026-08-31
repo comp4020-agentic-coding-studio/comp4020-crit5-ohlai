@@ -12,15 +12,17 @@ gets marked, not this repo.
 ## What this is
 
 **Beta** --- a bouldering wall you climb from memory. Thirty-odd holds scatter a
-dark wall, every one of them grey. One breathes. Press it and the wall lights a
-hold; press the route back from the bottom and it adds another, until you top
-out at eight.
+dark wall, every one of them grey. One breathes: that is round one. Press it and
+the wall adds a hold; press the route back from the bottom and it adds another,
+until you top out at eight.
 
 - **What the player does:** watch a route, then repeat it in order from the
   first hold. One press per hold, no timer, no undo.
 - **The one mechanic:** the route grows by exactly one hold per round, and is
   always replayed from the bottom. That is the whole rule set; everything else
-  is dressing on it.
+  is dressing on it. In particular there is no separate start control --- the
+  opening screen shows round one by *breathing* its first hold until the player
+  answers it, so the first press is already a move on a real route.
 - **Failing:** a press that is not the next hold in the route. The wall shakes,
   goes dark, and the climb is over --- back to a fresh wall. On a wall of thirty
   exactly one press is right, so falling is real rather than ceremonial.

@@ -24,6 +24,8 @@ const holds: Hold[] = layout(
 const buttons: HTMLButtonElement[] = [];
 
 let game: Game = START;
+/** Round one's hold, breathing on the opening screen until it is answered. */
+let opening = 0;
 /** Timers for the playback, kept so a fall can cancel a route mid-flight. */
 let pending: number[] = [];
 
@@ -158,10 +160,23 @@ function topOut(): void {
 function reset(): void {
   clearPending();
   for (const button of buttons) {
-    button.classList.remove("lit", "held", "wrong");
+    button.classList.remove("lit", "held", "wrong", "start");
   }
   game = START;
   paint();
+  arm();
+}
+
+/**
+ * Arm the opening screen. Round one is not announced by a separate "press to
+ * begin" hold that then hands over to the wall --- the wall shows round one by
+ * breathing its first hold, and keeps breathing it until it is answered. So the
+ * opening press is a real move on a real route rather than a doorbell, and the
+ * player has learned the whole loop by the time the second hold arrives.
+ */
+function arm(): void {
+  opening = nextHold(holds.length, undefined, Math.random);
+  buttons[opening]?.classList.add("start");
 }
 
 function touched(index: number): void {
@@ -172,14 +187,20 @@ function touched(index: number): void {
   if (isOver(game)) return;
 
   if (game.phase === "ready") {
-    // The first press is not a move --- there is no route yet. It answers the
-    // pulsing hold, proves that pressing does something, and buys the audio
-    // context. Then the wall takes its turn.
-    grip(index);
-    later(addHold, 620);
-    game = { ...game, phase: "showing" };
+    // A press somewhere else on the opening screen is not a fall. The wall is
+    // still showing round one --- it has not taken the hold away yet --- and
+    // rules.press() already says a press during showing is a misread turn, not
+    // a mistake. It still answers in the player's voice, because a wall that
+    // does nothing when touched reads as a picture.
+    if (index !== opening) {
+      grip(index);
+      return;
+    }
+    buttons[opening]?.classList.remove("start");
+    // The breathing was the playback. Catch the state up to it, then let the
+    // press fall through to the ordinary climbing path below.
+    game = handOver(extend(game, opening));
     paint();
-    return;
   }
 
   if (game.phase !== "climbing") return;
@@ -210,8 +231,7 @@ function touched(index: number): void {
 
 build();
 paint();
-
-// One hold breathes on the opening screen. It is the only colour on a grey
-// wall and the only thing that moves, which is the whole of the tutorial.
-const startHold = buttons[Math.floor(holds.length / 2)];
-startHold?.classList.add("start");
+// One hold breathes on the opening screen: the first hold of the route. It is
+// the only colour on a grey wall and the only thing that moves, which is the
+// whole of the tutorial.
+arm();

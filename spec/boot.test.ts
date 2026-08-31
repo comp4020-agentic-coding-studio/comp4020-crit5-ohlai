@@ -69,13 +69,29 @@ describe("the built game boots", () => {
     expect(document.querySelectorAll(".hold.start")).toHaveLength(1);
   });
 
+  it("does not punish a press anywhere else on the opening screen", () => {
+    // The breathing hold is the wall showing round one. Until it is answered
+    // the route has not been taken away, so a press elsewhere is a misread
+    // turn, not a fall --- falling before the wall has shown and hidden
+    // anything teaches the player that the game is unfair.
+    const other = [...document.querySelectorAll<HTMLButtonElement>(".hold")]
+      .find((hold) => !hold.classList.contains("start"));
+    other?.click();
+    expect(document.body.dataset.phase).toBe("ready");
+    expect(document.querySelectorAll(".hold.start")).toHaveLength(1);
+  });
+
   it("starts the route on the first press, and not before", () => {
     const start = document.querySelector<HTMLButtonElement>(".hold.start");
     expect(start).toBeTruthy();
     start?.click();
+    // "climbing", not "showing": the breathing hold *was* round one's playback,
+    // so answering it is a move on the route rather than a doorbell that then
+    // hands the wall its turn.
     expect(
       document.body.dataset.phase,
       "pressing the one hold that moves has to do something, or the invitation was a lie",
-    ).not.toBe("ready");
+    ).toBe("climbing");
+    expect(document.querySelectorAll(".hold.start")).toHaveLength(0);
   });
 });
