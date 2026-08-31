@@ -24,8 +24,15 @@ until you top out at eight.
   opening screen shows round one by *breathing* its first hold until the player
   answers it, so the first press is already a move on a real route.
 - **Failing:** a press that is not the next hold in the route. The wall shakes,
-  goes dark, and the climb is over --- back to a fresh wall. On a wall of thirty
-  exactly one press is right, so falling is real rather than ceremonial.
+  the wrong hold shakes with it, and then every hold comes off the wall and
+  tumbles out of frame. They pop back on a moment later and a new route starts.
+  On a wall of thirty exactly one press is right, so falling is real rather than
+  ceremonial.
+- **Nothing on this wall moves in step.** Each hold carries its own `--drift`,
+  `--tumble` and `--lag`, dealt by `layout()` alongside its position. Thirty
+  holds animating on one clock read as the page scrolling, not as a wall coming
+  apart, and the same goes for anything added later. If a new effect touches
+  every hold at once, give it per-hold numbers from `layout()`.
 - **Ending:** topping out at `TOP_OUT` (eight holds), which lights the whole
   wall bottom to top. Both endings return to the opening screen without asking.
 - **Point of view:** the wall is a physical surface being *shown* to you, not a

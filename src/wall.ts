@@ -26,6 +26,12 @@ export interface Hold {
   readonly scale: number;
   /** Whether to mirror it, so four photographs read as eight shapes. */
   readonly flipped: boolean;
+  /** Sideways travel when the hold comes off the wall, -1 to 1. */
+  readonly drift: number;
+  /** Degrees the hold turns through on the way down. */
+  readonly tumble: number;
+  /** Where this hold sits in the stagger, 0 to 1. */
+  readonly lag: number;
 }
 
 /** How far a hold may wander from its cell centre, as a fraction of the cell. */
@@ -67,6 +73,11 @@ export function layout(grid: Grid, random: () => number): Hold[] {
         spin: Math.round((random() - 0.5) * 120),
         scale: 0.82 + random() * 0.36,
         flipped: random() < 0.5,
+        // A fall needs thirty different falls. One shared timing and the wall
+        // slides off in one piece, which reads as the page scrolling.
+        drift: (random() - 0.5) * 2,
+        tumble: Math.round((random() - 0.5) * 1200),
+        lag: random(),
       });
     }
   }

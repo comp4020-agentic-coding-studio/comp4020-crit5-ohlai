@@ -57,6 +57,10 @@ function build(): void {
     button.style.setProperty("--spin", `${hold.spin}deg`);
     button.style.setProperty("--scale", String(hold.scale));
     button.style.setProperty("--flip", hold.flipped ? "-1" : "1");
+    // How this one comes off the wall when the climb ends.
+    button.style.setProperty("--drift", String(hold.drift));
+    button.style.setProperty("--tumble", `${hold.tumble}deg`);
+    button.style.setProperty("--lag", String(hold.lag));
 
     const image = document.createElement("img");
     image.src = `./holds/${hold.kind}.png`;
@@ -157,8 +161,8 @@ function fall(index: number): void {
   buttons[index]?.classList.add("wrong");
   paint();
   // Long enough to register as an ending, short enough that the next go feels
-  // available rather than offered.
-  later(reset, 1900);
+  // available rather than offered. The whole wall empties inside it.
+  later(() => reset(true), 1900);
 }
 
 function topOut(): void {
@@ -176,14 +180,31 @@ function topOut(): void {
   later(reset, order.length * 45 + 2600);
 }
 
-function reset(): void {
+/** How long the wall takes to fill back up. Matches the `land` animation. */
+const LANDING_MS = 760;
+
+function reset(fell = false): void {
   clearPending();
   for (const button of buttons) {
     button.classList.remove("lit", "held", "wrong", "done", "start");
   }
   game = START;
   paint();
-  arm();
+
+  if (!fell) {
+    arm();
+    return;
+  }
+
+  // The holds are off the wall, so they have to come back on before one of them
+  // can invite a press. Land first, breathe after. Doing it in this order also
+  // keeps the pop and the pulse from animating the same image at once, which
+  // the pulse would win.
+  for (const button of buttons) button.classList.add("landing");
+  later(() => {
+    for (const button of buttons) button.classList.remove("landing");
+    arm();
+  }, LANDING_MS);
 }
 
 /**

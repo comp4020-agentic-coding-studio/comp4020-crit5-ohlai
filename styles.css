@@ -266,10 +266,67 @@ body[data-phase="ready"] .hold.start img {
 }
 
 /* A fall shakes the wall. Brief, and it takes the whole surface rather than
-   the hold, because what went wrong was the route and not that one hold. */
+   the hold, because what went wrong was the route and not that one hold.
+   Brightness stops at 65%: the wall has to read as over while the holds are
+   still coming off it, and 45% hid the fall in the dark. */
 body[data-phase="fallen"] .wall {
   animation: slip 620ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-  filter: brightness(45%) saturate(40%);
+  filter: brightness(65%) saturate(40%);
+}
+
+/* Then the wall empties. Every hold goes, each on its own clock, its own spin
+   and its own sideways push, because thirty holds sliding down together read as
+   the page scrolling rather than as holds falling off a wall. The numbers come
+   from layout(), so no two walls empty the same way. */
+body[data-phase="fallen"] .hold img {
+  animation: peel calc(var(--scale) * 720ms) cubic-bezier(0.4, 0.1, 0.9, 0.6)
+    calc(380ms + var(--lag) * 320ms) forwards;
+}
+
+/* The hold that was wrong shakes, then goes first. It is the only thing on
+   screen that says which press ended the climb. */
+body[data-phase="fallen"] .hold.wrong img {
+  animation:
+    miss 380ms ease both,
+    peel calc(var(--scale) * 720ms) cubic-bezier(0.4, 0.1, 0.9, 0.6) 340ms
+      forwards;
+}
+
+@keyframes peel {
+  0% {
+    translate: 0 0;
+    rotate: var(--spin);
+  }
+
+  100% {
+    translate: calc(var(--drift) * 90px) 125vh;
+    rotate: calc(var(--spin) + var(--tumble));
+  }
+}
+
+/* Back onto the wall. A pop from nothing up to full size, staggered the same
+   way the fall was. Nothing flies in from off screen: the holds were always
+   bolted where they are, and watching them arrive from below would say they
+   were not. */
+.hold.landing img {
+  animation: land 380ms cubic-bezier(0.22, 1.4, 0.5, 1)
+    calc(var(--lag) * 260ms) both;
+}
+
+@keyframes land {
+  0% {
+    scale: calc(var(--flip) * var(--scale) * 0.14) calc(var(--scale) * 0.14);
+    opacity: 0;
+  }
+
+  55% {
+    opacity: 1;
+  }
+
+  100% {
+    scale: calc(var(--flip) * var(--scale)) var(--scale);
+    opacity: 1;
+  }
 }
 
 @keyframes slip {
@@ -308,6 +365,23 @@ body[data-phase="topped"] .wall {
 
   body[data-phase="fallen"] .wall {
     animation: none;
+  }
+
+  /* The wall still has to empty, or a fall stops reading as an ending. It
+     fades out where it would have tumbled. */
+  body[data-phase="fallen"] .hold img,
+  body[data-phase="fallen"] .hold.wrong img {
+    animation: dropout 260ms ease calc(var(--lag) * 140ms) forwards;
+  }
+
+  .hold.landing img {
+    animation: none;
+  }
+
+  @keyframes dropout {
+    to {
+      opacity: 0;
+    }
   }
 
   body[data-phase="ready"] .hold.start img {
