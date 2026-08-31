@@ -8,7 +8,14 @@ import {
   START,
   type Game,
 } from "./src/rules.ts";
-import { gridFor, layout, nextHold, pitchOf, type Hold } from "./src/wall.ts";
+import {
+  ascent,
+  gridFor,
+  layout,
+  nextHold,
+  pitchOf,
+  type Hold,
+} from "./src/wall.ts";
 
 // Wiring. Everything that decides anything lives in src/rules.ts; this file
 // turns state into a wall and presses into state, and owns the clock.
@@ -92,13 +99,26 @@ function flash(index: number, duration = 420): void {
  * were shown and you fall on move one, having done nothing wrong. A grip takes
  * the colour and pushes the hold in; a flash lifts it and puts a halo round it.
  */
-function grip(index: number, duration = 300): void {
+function grip(index: number, hz?: number, duration = 300): void {
   const button = buttons[index];
   const hold = holds[index];
   if (!button || !hold) return;
   button.classList.add("held");
-  voice.strike(pitchOf(hold));
+  voice.strike(hz ?? pitchOf(hold));
   later(() => button.classList.remove("held"), duration);
+}
+
+/**
+ * A correct move. The press animation passes, but the colour stays: the holds
+ * matched so far are the part of the route the player has already climbed, and
+ * leaving them lit turns "which one is next" from a memory question into a
+ * reading one halfway through a long round. The trail is cleared by show(),
+ * when the next round replays the route from the bottom --- so it lasts exactly
+ * as long as the round it belongs to.
+ */
+function climb(index: number, position: number): void {
+  grip(index, ascent(position));
+  buttons[index]?.classList.add("done");
 }
 
 function paint(): void {
@@ -114,6 +134,8 @@ function show(): void {
   // hold is added; dropping the handles keeps `pending` from growing for the
   // whole climb.
   clearPending();
+  // The new round starts from the bottom, so last round's trail goes with it.
+  for (const button of buttons) button.classList.remove("done");
   paint();
   const beat = game.sequence.length > 5 ? 460 : 560;
   game.sequence.forEach((index, position) => {
@@ -160,7 +182,7 @@ function topOut(): void {
 function reset(): void {
   clearPending();
   for (const button of buttons) {
-    button.classList.remove("lit", "held", "wrong", "start");
+    button.classList.remove("lit", "held", "wrong", "done", "start");
   }
   game = START;
   paint();
@@ -213,8 +235,9 @@ function touched(index: number): void {
     return;
   }
 
-  // A correct press: the hold answers in the player's voice, not the wall's.
-  grip(index);
+  // A correct press: the hold answers in the player's voice, not the wall's,
+  // and then stays lit for the rest of the round.
+  climb(index, before.matched);
 
   if (game.phase === "topped") {
     later(topOut, 380);

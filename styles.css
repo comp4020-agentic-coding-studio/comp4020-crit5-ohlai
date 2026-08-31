@@ -190,9 +190,9 @@ body[data-phase="showing"] .hold {
 
 /* Hover and focus are affordance, not decoration: they are how a pointer finds
    out the grey shapes are live before committing to a press. */
-body[data-phase="climbing"] .hold:hover img,
-body[data-phase="ready"] .hold:hover img,
-.hold:focus-visible img {
+body[data-phase="climbing"] .hold:not(.done):hover img,
+body[data-phase="ready"] .hold:not(.done):hover img,
+.hold:not(.done):focus-visible img {
   filter: grayscale(70%) brightness(calc(var(--gain, 1) * 1.62));
   translate: 0 -3px;
 }
@@ -206,6 +206,14 @@ body[data-phase="ready"] .hold:hover img,
     drop-shadow(0 0 18px rgb(255 214 138 / 65%));
   translate: 0 -5px;
   transition: filter 90ms ease;
+}
+
+/* Already climbed this round. Full colour and at rest --- no push, no halo, no
+   lift --- so the trail reads as ground the player has covered rather than as
+   the wall speaking or as a press still happening. Declared before .held so
+   that a press on a done hold still animates. */
+.hold.done img {
+  filter: brightness(var(--lift)) saturate(1.05);
 }
 
 /* The player's press. Full colour so it plainly answers, but pushed in and

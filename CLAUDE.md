@@ -30,9 +30,13 @@ until you top out at eight.
   wall bottom to top. Both endings return to the opening screen without asking.
 - **Point of view:** the wall is a physical surface being *shown* to you, not a
   menu. It has one voice for showing and the player has another --- the wall
-  **lights** a hold (lifted, haloed); the player **grips** one (full colour,
-  pushed in, no halo). These never look alike, because a player who cannot tell
-  the wall's move from their own falls without having made a mistake.
+  **lights** a hold (lifted, haloed, pitched by where it is on the wall); the
+  player **grips** one (full colour, pushed in, no halo, pitched by how far up
+  the route they are, so a matched round is a rising line). These never look or
+  sound alike, because a player who cannot tell the wall's move from their own
+  falls without having made a mistake. A gripped hold then stays in colour for
+  the rest of the round --- the route keeps a record of itself, so a long round
+  asks the player to remember the route and not also their place in it.
 - **The tradeoff rule:** when depth and legibility pull against each other,
   legibility wins, because the brief forbids explaining and the affordance is
   the only teacher left. Colour on this page is a scarce resource: the wall is

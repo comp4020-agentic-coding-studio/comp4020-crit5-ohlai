@@ -94,4 +94,14 @@ describe("the built game boots", () => {
     ).toBe("climbing");
     expect(document.querySelectorAll(".hold.start")).toHaveLength(0);
   });
+
+  it("leaves the hold the player matched lit behind them", () => {
+    // The press animation is 300ms; the colour has to outlast it. Without the
+    // trail, a seven hold round asks the player to remember both the route and
+    // how far along it they are, and only one of those is the game.
+    expect(
+      document.querySelectorAll(".hold.done"),
+      "the matched hold went dark again, so the route keeps no record of itself",
+    ).toHaveLength(1);
+  });
 });
