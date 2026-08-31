@@ -8,14 +8,7 @@ import {
   START,
   type Game,
 } from "./src/rules.ts";
-import {
-  ascent,
-  gridFor,
-  layout,
-  nextHold,
-  pitchOf,
-  type Hold,
-} from "./src/wall.ts";
+import { gridFor, layout, nextHold, pitchOf, type Hold } from "./src/wall.ts";
 
 // Wiring. Everything that decides anything lives in src/rules.ts; this file
 // turns state into a wall and presses into state, and owns the clock.
@@ -99,12 +92,16 @@ function flash(index: number, duration = 420): void {
  * were shown and you fall on move one, having done nothing wrong. A grip takes
  * the colour and pushes the hold in; a flash lifts it and puts a halo round it.
  */
-function grip(index: number, hz?: number, duration = 300): void {
+function grip(index: number, duration = 300): void {
   const button = buttons[index];
   const hold = holds[index];
   if (!button || !hold) return;
   button.classList.add("held");
-  voice.strike(hz ?? pitchOf(hold));
+  // The same pitch the wall used to show this hold. The two voices differ in
+  // the eye and never in the ear: a hold's note is how the player recognises
+  // it, so a press that answers in a different pitch than the one it was shown
+  // in is not a second voice, it is the memory aid contradicting itself.
+  voice.strike(pitchOf(hold));
   later(() => button.classList.remove("held"), duration);
 }
 
@@ -116,8 +113,8 @@ function grip(index: number, hz?: number, duration = 300): void {
  * when the next round replays the route from the bottom --- so it lasts exactly
  * as long as the round it belongs to.
  */
-function climb(index: number, position: number): void {
-  grip(index, ascent(position));
+function climb(index: number): void {
+  grip(index);
   buttons[index]?.classList.add("done");
 }
 
@@ -237,7 +234,7 @@ function touched(index: number): void {
 
   // A correct press: the hold answers in the player's voice, not the wall's,
   // and then stays lit for the rest of the round.
-  climb(index, before.matched);
+  climb(index);
 
   if (game.phase === "topped") {
     later(topOut, 380);

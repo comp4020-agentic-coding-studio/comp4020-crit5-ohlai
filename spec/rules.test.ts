@@ -9,7 +9,6 @@ import {
   TOP_OUT,
   type Game,
 } from "../src/rules.ts";
-import { ascent } from "../src/wall.ts";
 
 // The rule, on its own.
 //
@@ -154,25 +153,5 @@ describe("the height gauge", () => {
       expect(value).toBeGreaterThanOrEqual(0);
       expect(value).toBeLessThanOrEqual(1);
     }
-  });
-});
-
-describe("the player's voice climbs", () => {
-  it("rises with every press of a round, all the way to the top", () => {
-    // The reward for a clean round is meant to be audible before the wall says
-    // anything, and that only works if the line never doubles back. A pitch
-    // table with a wrapped octave would sound fine for four holds and collapse
-    // on the fifth --- which is exactly where a player starts needing the cue.
-    const notes = Array.from({ length: TOP_OUT }, (_, step) => ascent(step));
-    for (let step = 1; step < notes.length; step += 1) {
-      expect(notes[step]!, `press ${step + 1} did not rise`).toBeGreaterThan(
-        notes[step - 1]!,
-      );
-    }
-  });
-
-  it("stays in a range a small speaker can actually make", () => {
-    expect(ascent(0)).toBeGreaterThan(100);
-    expect(ascent(TOP_OUT - 1)).toBeLessThan(1600);
   });
 });

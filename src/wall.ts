@@ -91,21 +91,6 @@ export function pitchOf(hold: Hold): number {
   return ROOT_HZ * 2 ** ((degree + octave * 12) / 12);
 }
 
-/**
- * The player's voice, climbing: the pitch for the nth press of a round.
- *
- * The wall's pitches say *where* a hold is, so a route played back is a shape.
- * The player's say *how far up it they are*, so a round matched is a rising
- * line that gets longer every time --- the reward for a clean round is audible
- * before the wall says anything. It also keeps the two voices apart in the ear
- * the way `lit` and `held` keep them apart in the eye.
- */
-export function ascent(position: number): number {
-  const degree = PENTATONIC[position % PENTATONIC.length] ?? 0;
-  const octave = Math.floor(position / PENTATONIC.length);
-  return ROOT_HZ * 2 ** ((degree + octave * 12) / 12);
-}
-
 /** Pick a hold index that is not the one just used, so a route never stutters. */
 export function nextHold(
   count: number,
